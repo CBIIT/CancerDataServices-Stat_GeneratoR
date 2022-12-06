@@ -169,7 +169,7 @@ if (file_path_null==FALSE){
   file_count=length(unique(df$url))
   
   #file size in Tb in the submission
-  file_size=sum(as.numeric(df$file_size))/1e12
+  file_size=sum(as.numeric(df$file_size),na.rm = T)/1e12
   
   #number of each file type
   file_type_count=count(group_by(df,file_type))
