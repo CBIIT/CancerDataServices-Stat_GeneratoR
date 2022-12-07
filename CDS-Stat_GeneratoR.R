@@ -1,6 +1,6 @@
 #!/usr/bin/env Rscript
 
-#Cancer Data Services - Stat_GeneratoR R v2.0.0
+#Cancer Data Services - Stat_GeneratoR R v2.0.1
 
 
 ##################
@@ -58,7 +58,7 @@ option_list = list(
 )
 
 #create list of options and values for file input
-opt_parser = OptionParser(option_list=option_list, description = "\nCDS-Stat_GeneratoR v2.0.0")
+opt_parser = OptionParser(option_list=option_list, description = "\nCDS-Stat_GeneratoR v2.0.1")
 opt = parse_args(opt_parser)
 
 #If no options are presented, return --help, stop and print the following message.
@@ -177,17 +177,29 @@ if (file_path_null==FALSE){
   #number of each gender in the submission
   gender_count=count(group_by(unique(select(df, participant_id,gender)), gender))
   
+  #number of each race in the submission
+  race_count=count(group_by(unique(select(df, participant_id,race)), race))
+  
+  #number of each ethnicity in the submission
+  ethnicity_count=count(group_by(unique(select(df, participant_id,ethnicity)), ethnicity))
+  
   #number of each sample type in the submission
   sample_type_count=count(group_by(select(count(group_by(df,sample_id,sample_type)),-n),sample_type))
   
   #number of each library_strategy in the submission
   library_strategy_count=count(group_by(df,library_strategy))
   
+  #number of each library_source in the submission
+  library_source_count=count(group_by(df,library_source))
+  
   #number of each sample_anatomic_site in the submission
   anatomic_site_count=count(group_by(select(count(group_by(df,sample_id,sample_anatomic_site)),-n),sample_anatomic_site))
   
   #number of each primary_diagnosis in the submission
   primary_diagnosis_count=count(group_by(select(count(group_by(df,sample_id,primary_diagnosis)),-n),primary_diagnosis))
+  
+  #number of each disease_type in the submission
+  disease_type_count=count(group_by(select(count(group_by(df,sample_id,disease_type)),-n),disease_type))
   
   
   #########
@@ -203,30 +215,51 @@ if (file_path_null==FALSE){
       "Number of Files: ", file_count,"\n",
       "File size (Tb): ",file_size,"\n",sep = "")
   
-  cat("\nGender\n")
+  cat("\nGender:\n")
   for (x in 1:dim(gender_count)[1]){
-    cat(gender_count[x,1][[1]],": ",gender_count[x,"n"][[1]],"\n",sep = "")
+    cat("\t",gender_count[x,1][[1]],": ",gender_count[x,"n"][[1]],"\n",sep = "")
   }
   
-  cat("\nSample Type\n")
+  cat("\nRace:\n")
+  for (x in 1:dim(race_count)[1]){
+    cat("\t",race_count[x,1][[1]],": ",race_count[x,"n"][[1]],"\n",sep = "")
+  }
+  
+  cat("\nEthnicity:\n")
+  for (x in 1:dim(ethnicity_count)[1]){
+    cat("\t",ethnicity_count[x,1][[1]],": ",ethnicity_count[x,"n"][[1]],"\n",sep = "")
+  }
+  
+  cat("\nSample Type:\n")
   for (x in 1:dim(sample_type_count)[1]){
-    cat(sample_type_count[x,1][[1]],": ",sample_type_count[x,"n"][[1]],"\n",sep = "")
+    cat("\t",sample_type_count[x,1][[1]],": ",sample_type_count[x,"n"][[1]],"\n",sep = "")
   }
   
-  cat("\nLibrary Strategy\n")
+  cat("\nLibrary Strategy:\n")
   for (x in 1:dim(library_strategy_count)[1]){
-    cat(library_strategy_count[x,1][[1]],": ",library_strategy_count[x,"n"][[1]],"\n",sep = "")
+    cat("\t",library_strategy_count[x,1][[1]],": ",library_strategy_count[x,"n"][[1]],"\n",sep = "")
   }
   
-  cat("\nSample Anatomic Site\n")
+  cat("\nLibrary Source:\n")
+  for (x in 1:dim(library_source_count)[1]){
+    cat("\t",library_source_count[x,1][[1]],": ",library_source_count[x,"n"][[1]],"\n",sep = "")
+  }
+  
+  cat("\nSample Anatomic Site:\n")
   for (x in 1:dim(anatomic_site_count)[1]){
-    cat(anatomic_site_count[x,1][[1]],": ",anatomic_site_count[x,"n"][[1]],"\n",sep = "")
+    cat("\t",anatomic_site_count[x,1][[1]],": ",anatomic_site_count[x,"n"][[1]],"\n",sep = "")
   }
   
-  cat("\nPrimary Diagnosis\n")
+  cat("\nPrimary Diagnosis:\n")
   for (x in 1:dim(primary_diagnosis_count)[1]){
-    cat(primary_diagnosis_count[x,1][[1]],": ",primary_diagnosis_count[x,"n"][[1]],"\n",sep = "")
+    cat("\t",primary_diagnosis_count[x,1][[1]],": ",primary_diagnosis_count[x,"n"][[1]],"\n",sep = "")
   }
+  
+  cat("\nDisease Type:\n")
+  for (x in 1:dim(disease_type_count)[1]){
+    cat("\t",disease_type_count[x,1][[1]],": ",disease_type_count[x,"n"][[1]],"\n",sep = "")
+  }
+  
 }else{
   cat("\n\nFor indepth stats for a specific submission, please submit the indexed manifest.\n")
 }
@@ -258,9 +291,9 @@ if (!is.null(subcon_path)){
   
   cat("Cumulative number of participants: ",participant_subcon_count,"\n",sep = "")
   
-  cat("\nCumulative Gender\n")
+  cat("\nCumulative Gender:\n")
   for (x in 1:dim(gender_subcon_count)[1]){
-    cat(gender_subcon_count[x,1][[1]],": ",gender_subcon_count[x,"n"][[1]],"\n",sep = "")
+    cat("\t",gender_subcon_count[x,1][[1]],": ",gender_subcon_count[x,"n"][[1]],"\n",sep = "")
   }
 }else{
   cat("\n\nFor cumulative stats of the subjects, please submit the dbGaP subject_consent data set file.\n")
@@ -291,9 +324,9 @@ if (!is.null(samatt_path)){
 
   cat("Cumulative number of samples: ",sample_samatt_count,"\n",sep = "")
   
-  cat("\nCumulative Sample Type\n")
+  cat("\nCumulative Sample Type:\n")
   for (x in 1:dim(sample_type_samatt_count)[1]){
-    cat(sample_type_samatt_count[x,1][[1]],": ",sample_type_samatt_count[x,"n"][[1]],"\n",sep = "")
+    cat("\t",sample_type_samatt_count[x,1][[1]],": ",sample_type_samatt_count[x,"n"][[1]],"\n",sep = "")
   }
 }else{
   cat("\n\nFor cumulative stats of the samples, please submit the dbGaP sample_attributes data set file.\n")
