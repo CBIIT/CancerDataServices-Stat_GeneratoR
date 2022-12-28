@@ -49,11 +49,11 @@ rm(new.packages)
 
 #Option list for arg parse
 option_list = list(
-  make_option(c("-f", "--file"), type="character", default=NULL, 
+  make_option(c("-f", "--file"), type="character", default=NULL,
               help="A validated and indexed CDS template file (.xlsx, .tsv, .csv)", metavar="character"),
-  make_option(c("-c", "--subject_consent"), type="character", default=NULL, 
+  make_option(c("-c", "--subject_consent"), type="character", default=NULL,
               help="A dbGaP subject_consent data file (SC_DS)", metavar="character"),
-  make_option(c("-a", "--sample_attribute"), type="character", default=NULL, 
+  make_option(c("-a", "--sample_attribute"), type="character", default=NULL,
               help="A dbGaP sample_attribute data file (SA_DS)", metavar="character")
 )
 
@@ -123,7 +123,7 @@ output_file=paste(file_name,
                     replacement = ""),
                   sep="")
 
-#Read in metadata page/file to check against the expected/required properties. 
+#Read in metadata page/file to check against the expected/required properties.
 #Logic has been setup to accept the original XLSX as well as a TSV or CSV format.
 if (file_path_null==FALSE){
   if (ext == "tsv"){
@@ -161,105 +161,110 @@ sink(paste(path,output_file,".txt",sep = ""))
 if (file_path_null==FALSE){
   #number of unique participants in the submission
   participant_count=length(unique(df$participant_id))
-  
+
   #number of unique samples in the submission
   sample_count=length(unique(df$sample_id))
-  
+
   #number of unique files in the submission
   file_count=length(unique(df$url))
-  
+
   #file size in Tb in the submission
   file_size=sum(as.numeric(df$file_size),na.rm = T)/1e12
-  
+
   #number of each file type
   file_type_count=count(group_by(df,file_type))
-  
+
   #number of each gender in the submission
   gender_count=count(group_by(unique(select(df, participant_id,gender)), gender))
-  
+
   #number of each race in the submission
   race_count=count(group_by(unique(select(df, participant_id,race)), race))
-  
+
   #number of each ethnicity in the submission
   ethnicity_count=count(group_by(unique(select(df, participant_id,ethnicity)), ethnicity))
-  
+
   #number of each sample type in the submission
   sample_type_count=count(group_by(select(count(group_by(df,sample_id,sample_type)),-n),sample_type))
-  
+
   #number of each library_strategy in the submission
   library_strategy_count=count(group_by(df,library_strategy))
-  
+
   #number of each library_source in the submission
   library_source_count=count(group_by(df,library_source))
-  
+
   #number of each sample_anatomic_site in the submission
   anatomic_site_count=count(group_by(select(count(group_by(df,sample_id,sample_anatomic_site)),-n),sample_anatomic_site))
-  
+
   #number of each primary_diagnosis in the submission
   primary_diagnosis_count=count(group_by(select(count(group_by(df,sample_id,primary_diagnosis)),-n),primary_diagnosis))
-  
+
   #number of each disease_type in the submission
   disease_type_count=count(group_by(select(count(group_by(df,sample_id,disease_type)),-n),disease_type))
-  
-  
+
+
   #########
   #
   # Stats output
   #
   #########
-  
+
   cat("Below is the stat output file for: ",file_name,"\n\n",sep = "")
-  
+
   cat("Number of participants: ",participant_count,"\n",
       "Number of samples: ", sample_count, "\n",
       "Number of Files: ", file_count,"\n",
       "File size (Tb): ",file_size,"\n",sep = "")
-  
+
   cat("\nGender:\n")
   for (x in 1:dim(gender_count)[1]){
     cat("\t",gender_count[x,1][[1]],": ",gender_count[x,"n"][[1]],"\n",sep = "")
   }
-  
+
   cat("\nRace:\n")
   for (x in 1:dim(race_count)[1]){
     cat("\t",race_count[x,1][[1]],": ",race_count[x,"n"][[1]],"\n",sep = "")
   }
-  
+
   cat("\nEthnicity:\n")
   for (x in 1:dim(ethnicity_count)[1]){
     cat("\t",ethnicity_count[x,1][[1]],": ",ethnicity_count[x,"n"][[1]],"\n",sep = "")
   }
-  
+
   cat("\nSample Type:\n")
   for (x in 1:dim(sample_type_count)[1]){
     cat("\t",sample_type_count[x,1][[1]],": ",sample_type_count[x,"n"][[1]],"\n",sep = "")
   }
-  
+
+  cat("\nFile Type:\n")
+  for (x in 1:dim(file_type_count)[1]){
+    cat("\t",file_type_count[x,1][[1]],": ",file_type_count[x,"n"][[1]],"\n",sep = "")
+  }
+
   cat("\nLibrary Strategy:\n")
   for (x in 1:dim(library_strategy_count)[1]){
     cat("\t",library_strategy_count[x,1][[1]],": ",library_strategy_count[x,"n"][[1]],"\n",sep = "")
   }
-  
+
   cat("\nLibrary Source:\n")
   for (x in 1:dim(library_source_count)[1]){
     cat("\t",library_source_count[x,1][[1]],": ",library_source_count[x,"n"][[1]],"\n",sep = "")
   }
-  
+
   cat("\nSample Anatomic Site:\n")
   for (x in 1:dim(anatomic_site_count)[1]){
     cat("\t",anatomic_site_count[x,1][[1]],": ",anatomic_site_count[x,"n"][[1]],"\n",sep = "")
   }
-  
+
   cat("\nPrimary Diagnosis:\n")
   for (x in 1:dim(primary_diagnosis_count)[1]){
     cat("\t",primary_diagnosis_count[x,1][[1]],": ",primary_diagnosis_count[x,"n"][[1]],"\n",sep = "")
   }
-  
+
   cat("\nDisease Type:\n")
   for (x in 1:dim(disease_type_count)[1]){
     cat("\t",disease_type_count[x,1][[1]],": ",disease_type_count[x,"n"][[1]],"\n",sep = "")
   }
-  
+
 }else{
   cat("\n\nFor indepth stats for a specific submission, please submit the indexed manifest.\n")
 }
@@ -273,24 +278,24 @@ if (file_path_null==FALSE){
 
 #Stats for subcon file
 if (!is.null(subcon_path)){
-  
+
   cat("\n\nBelow is the stat output file for: ",basename(subcon_path),"\n\n",sep = "")
-  
+
   participant_subcon_count=length(unique(df_subcon$SUBJECT_ID))
-  
+
   gender_subcon_count=count(group_by(unique(df_subcon),SEX))
   gender_subcon_count$SEX[grep(pattern = TRUE, x = gender_subcon_count$SEX %in% "1")]<-"Male"
   gender_subcon_count$SEX[grep(pattern = TRUE, x = gender_subcon_count$SEX %in% "2")]<-"Female"
-  
-  
+
+
 #########
 #
 # Stats output
 #
 #########
-  
+
   cat("Cumulative number of participants: ",participant_subcon_count,"\n",sep = "")
-  
+
   cat("\nCumulative Gender:\n")
   for (x in 1:dim(gender_subcon_count)[1]){
     cat("\t",gender_subcon_count[x,1][[1]],": ",gender_subcon_count[x,"n"][[1]],"\n",sep = "")
@@ -308,11 +313,11 @@ if (!is.null(subcon_path)){
 
 #Stats for samatt file
 if (!is.null(samatt_path)){
-  
+
   cat("\n\nBelow is the stat output file for: ",basename(samatt_path),"\n\n",sep = "")
-  
+
   sample_samatt_count=length(unique(df_samatt$SAMPLE_ID))
-  
+
   sample_type_samatt_count=count(group_by(unique(df_samatt),SAMPLE_TYPE))
 
 
@@ -323,7 +328,7 @@ if (!is.null(samatt_path)){
 #########
 
   cat("Cumulative number of samples: ",sample_samatt_count,"\n",sep = "")
-  
+
   cat("\nCumulative Sample Type:\n")
   for (x in 1:dim(sample_type_samatt_count)[1]){
     cat("\t",sample_type_samatt_count[x,1][[1]],": ",sample_type_samatt_count[x,"n"][[1]],"\n",sep = "")
