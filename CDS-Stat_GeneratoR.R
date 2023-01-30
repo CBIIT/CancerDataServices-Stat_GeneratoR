@@ -88,7 +88,7 @@ if (!is.null(opt$sample_attribute)){
   samatt_path=file_path_as_absolute(opt$sample_attribute)
 }
 
-#A start message for the user that the validation is underway.
+#A start message for the user that the stats generation is underway.
 cat("The data file stats are being generated at this time.\n")
 
 
@@ -146,7 +146,7 @@ if (!is.null(samatt_path)){
   df_samatt=suppressMessages(read_tsv(file = samatt_path, guess_max = 1000000, col_types = cols(.default = col_character())))
 }
 
-cat(paste("This is a validation output for ",file_name,".\n\n",sep = ""))
+cat(paste("This is a stats output for ",file_name,".\n\n",sep = ""))
 
 
 ############
@@ -166,7 +166,7 @@ if (file_path_null==FALSE){
   sample_count=length(unique(df$sample_id))
 
   #number of unique files in the submission
-  file_count=length(unique(df$url))
+  file_count=length(unique(df$file_url_in_cds))
 
   #file size in Tb in the submission
   file_size=sum(as.numeric(df$file_size),na.rm = T)/1e12
