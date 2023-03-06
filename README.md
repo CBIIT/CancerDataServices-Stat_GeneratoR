@@ -10,7 +10,7 @@ Rscript --vanilla CDS-Stat_GeneratoR.R --help
 ```
 Usage: CDS-Stat_GeneratoR.R [options]
 
-CDS-Stat_GeneratoR v2.0.1
+CDS-Stat_GeneratoR v2.0.2
 
 Options:
 	-f CHARACTER, --file=CHARACTER
