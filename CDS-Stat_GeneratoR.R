@@ -1,6 +1,6 @@
 #!/usr/bin/env Rscript
 
-#Cancer Data Services - Stat_GeneratoR R v2.0.1
+#Cancer Data Services - Stat_GeneratoR
 
 
 ##################
@@ -63,7 +63,7 @@ option_list = list(
 )
 
 #create list of options and values for file input
-opt_parser = OptionParser(option_list=option_list, description = "\nCDS-Stat_GeneratoR v2.0.2")
+opt_parser = OptionParser(option_list=option_list, description = "\nCDS-Stat_GeneratoR v2.0.3")
 opt = parse_args(opt_parser)
 
 #If no options are presented, return --help, stop and print the following message.
@@ -305,6 +305,7 @@ if (file_path_null==FALSE){
     file_type_count=rbind(file_type_count,file_type_count_add)
   }
   
+  #Prevents output of Rplots.pdf that is generated when plots are being generated and saved.
   pdf(NULL)
   #Plot general stats and file type information
   plot_gen_stats=ggplot(data = df_gen_stats, mapping = aes(x= Stat, y=Count, fill=Stat))+
@@ -343,7 +344,7 @@ if (file_path_null==FALSE){
   # List of figure groupings
   #####################
   
-  #create lists to note which properties will be contained in the figure. It is best not to put more than 3 in a figure, but that is not a hard rule. These values can be changed in teh save_plot where the ncol and nrow values are noted.
+  #create lists to note which properties will be contained in the figure. It is best not to put more than 3 in a figure, but that is not a hard rule. These values can be changed in the save_plot where the ncol and nrow values are noted.
   demo_stats=list(gender_count_plot=gender_count,race_count_plot=race_count,ethnicity_count_plot=ethnicity_count)
   
   library_stats=list(sample_type_count_plot=sample_type_count,library_strategy_count_plot=library_strategy_count,library_source_count_plot=library_source_count)
