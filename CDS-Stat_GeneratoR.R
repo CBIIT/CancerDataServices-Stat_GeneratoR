@@ -22,7 +22,7 @@
 ##################
 
 #List of needed packages
-list_of_packages=c("dplyr","readr","stringi","readxl","ggplot2","ggthemes","gridExtra","viridis","optparse","tools")
+list_of_packages=c("dplyr","readr","stringi","readxl","ggplot2","ggthemes","grid","gridExtra","viridis","optparse","tools")
 
 #Based on the packages that are present, install ones that are required.
 new.packages <- list_of_packages[!(list_of_packages %in% installed.packages()[,"Package"])]
@@ -35,6 +35,7 @@ suppressMessages(library(stringi,verbose = F))
 suppressMessages(library(readxl,verbose = F))
 suppressMessages(library(ggplot2,verbose = F))
 suppressMessages(library(ggthemes,verbose = F))
+suppressMessages(library(grid,verbose = F))
 suppressMessages(library(gridExtra,verbose = F))
 suppressMessages(library(viridis,verbose = F))
 suppressMessages(library(optparse,verbose = F))
@@ -287,28 +288,9 @@ if (file_path_null==FALSE){
   df_gen_stats$Size=NA
   df_gen_stats$Size[grep(pattern = "files",x = df_gen_stats$Stat)]=paste(round(file_size,2), " Tb",sep = "")
   
-  #Cleaning of general data frames to include an 'ingest' type and turn NA's into "NA"s
-  file_type_count$ingest="File Type"
-  file_type_count[is.na(file_type_count)]<-"NA"
-  gender_count$ingest="Gender"
-  gender_count[is.na(gender_count)]<-"NA"
-  race_count$ingest="Race"
-  race_count[is.na(race_count)]<-"NA"
-  ethnicity_count$ingest="Ethnicity"
-  ethnicity_count[is.na(ethnicity_count)]<-"NA"
-  sample_type_count$ingest="Sample Type"
-  sample_type_count[is.na(sample_type_count)]<-"NA"
-  library_strategy_count$ingest="Library Strategy"
-  library_strategy_count[is.na(library_strategy_count)]<-"NA"
-  library_source_count$ingest="Library Source"
-  library_source_count[is.na(library_source_count)]<-"NA"
-  anatomic_site_count$ingest="Anatomic Site"
-  anatomic_site_count[is.na(anatomic_site_count)]<-"NA"
-  primary_diagnosis_count$ingest="Primary Diagnosis"
-  primary_diagnosis_count[is.na(primary_diagnosis_count)]<-"NA"
-  disease_type_count$ingest="Disease Type"
-  disease_type_count[is.na(disease_type_count)]<-"NA"
-  
+  file_type_count_plot=file_type_count
+  file_type_count_plot$ingest="File Type"
+  file_type_count_plot[is.na(file_type_count_plot)]<-"NA"
   
   #Fixes for common datasets that have over 10 values
   if (dim(file_type_count)[1]>11){
@@ -323,34 +305,8 @@ if (file_path_null==FALSE){
     file_type_count=rbind(file_type_count,file_type_count_add)
   }
   
-  if (dim(primary_diagnosis_count)[1]>11){
-    primary_diagnosis_count=
-      primary_diagnosis_count%>%
-      arrange(desc(n))
-    cutoff_n=primary_diagnosis_count$n[10]
-    other_df=filter(primary_diagnosis_count, n<cutoff_n)
-    other_value=sum(other_df$n)
-    primary_diagnosis_count=filter(primary_diagnosis_count, n>=cutoff_n)
-    primary_diagnosis_count_add=tibble(primary_diagnosis="Other",n=other_value,ingest="Primary Diagnosis")
-    primary_diagnosis_count=rbind(primary_diagnosis_count,primary_diagnosis_count_add)
-  }
-  
-  if (dim(disease_type_count)[1]>11){
-    disease_type_count=
-      disease_type_count%>%
-      arrange(desc(n))
-    cutoff_n=disease_type_count$n[10]
-    other_df=filter(disease_type_count, n<cutoff_n)
-    other_value=sum(other_df$n)
-    disease_type_count=filter(disease_type_count, n>=cutoff_n)
-    disease_type_count_add=tibble(disease_type="Other",n=other_value,ingest="Disease Type")
-    disease_type_count=rbind(disease_type_count,disease_type_count_add)
-  }
-  
-  
-  
+  pdf(NULL)
   #Plot general stats and file type information
-  
   plot_gen_stats=ggplot(data = df_gen_stats, mapping = aes(x= Stat, y=Count, fill=Stat))+
     scale_fill_viridis(discrete=TRUE,option="cividis")+
     geom_col(alpha=0.5)+
@@ -359,18 +315,17 @@ if (file_path_null==FALSE){
     geom_label(mapping = aes(label=Size,  vjust=0),alpha=0, size=5, label.size = NA)+
     guides(fill=guide_legend(title = "Statistics"))+
     theme_few()+
-    ggtitle("Counts for Submission")+
     theme(axis.text=element_text(size=12),
           axis.ticks.x=element_blank(),
           axis.title.x=element_blank(),
           plot.title = element_text(hjust = 0.5))
   
-  plot_file_stats=ggplot(data = file_type_count, mapping = aes(x=ingest, y=n, fill=file_type))+
+  plot_file_stats=ggplot(data = file_type_count_plot, mapping = aes(x=ingest, y=n, fill=file_type))+
     scale_fill_viridis(discrete=TRUE,option="cividis")+
     geom_bar(alpha=0.5, stat = "identity")+
     geom_text(aes(label = n, fontface="bold"),size=5,
               position = position_stack(vjust=0.5))+
-    geom_text(aes(x=ingest, label=sum(file_type_count$n), y=sum(file_type_count$n)+(sum(file_type_count$n)/50)), size=5)+
+    geom_text(aes(x=ingest, label=sum(n), y=sum(n)+(sum(n)/50)), size=5)+
     guides(fill=guide_legend(title = "File Type"))+
     theme_few()+
     ggtitle(" ")+
@@ -381,158 +336,84 @@ if (file_path_null==FALSE){
           plot.title = element_text(hjust = 0.5))
   
   #save plot
-  suppressWarnings(ggsave(plot = grid.arrange(plot_gen_stats, plot_file_stats, nrow=1) , filename =paste(output_file,"_gen_stats.png",sep = ""),path = path, width = 16, height = 8, units = "in", device = "png"))
+  suppressWarnings(ggsave(plot = grid.arrange(plot_gen_stats, plot_file_stats, nrow=1,top=textGrob("Submission Counts",gp=gpar(fontsize=20))) , filename =paste(output_file,"_gen_stats.png",sep = ""),path = path, width = 16, height = 8, units = "in", device = "png"))
   
-
-  #Create plots for gender, race, and ethnicity.
-
-  plot_gender_stats=ggplot(data = gender_count, mapping = aes(x=ingest, y=n, fill=gender))+
-    scale_fill_viridis(discrete=TRUE,option="cividis")+
-    geom_bar(alpha=0.5, stat = "identity")+
-    geom_text(aes(label = n, fontface="bold"),size=5,
-              position = position_stack(vjust=0.5))+
-    geom_text(aes(x=ingest, label=sum(gender_count$n), y=sum(gender_count$n)+(sum(gender_count$n)/50)), size=5)+
-    guides(fill=guide_legend(title = "Gender"))+
-    theme_few()+
-    ggtitle(" ")+
-    labs(y="Count")+
-    theme(axis.text=element_text(size=12),
-          axis.ticks.x=element_blank(),
-          axis.title.x=element_blank(),
-          plot.title = element_text(hjust = 0.5))
-
-  plot_race_stats=ggplot(data = race_count, mapping = aes(x=ingest, y=n, fill=race))+
-    scale_fill_viridis(discrete=TRUE,option="cividis")+
-    geom_bar(alpha=0.5, stat = "identity")+
-    geom_text(aes(label = n, fontface="bold"),size=5,
-              position = position_stack(vjust=0.5))+
-    geom_text(aes(x=ingest, label=sum(race_count$n), y=sum(race_count$n)+(sum(race_count$n)/50)), size=5)+
-    guides(fill=guide_legend(title = "Race"))+
-    theme_few()+
-    ggtitle("Counts for Submission")+
-    labs(y="Count")+
-    theme(axis.text=element_text(size=12),
-          axis.ticks.x=element_blank(),
-          axis.title.x=element_blank(),
-          plot.title = element_text(hjust = 0.5))
-
-  plot_ethnicity_stats=ggplot(data = ethnicity_count, mapping = aes(x=ingest, y=n, fill=ethnicity))+
-    scale_fill_viridis(discrete=TRUE,option="cividis")+
-    geom_bar(alpha=0.5, stat = "identity")+
-    geom_text(aes(label = n, fontface="bold"),size=5,
-              position = position_stack(vjust=0.5))+
-    geom_text(aes(x=ingest, label=sum(ethnicity_count$n), y=sum(ethnicity_count$n)+(sum(ethnicity_count$n)/50)), size=5)+
-    guides(fill=guide_legend(title = "Ethnicity"))+
-    theme_few()+
-    ggtitle(" ")+
-    labs(y="Count")+
-    theme(axis.text=element_text(size=12),
-          axis.ticks.x=element_blank(),
-          axis.title.x=element_blank(),
-          plot.title = element_text(hjust = 0.5))
-
-  suppressWarnings(ggsave(plot = grid.arrange(plot_gender_stats, plot_race_stats, plot_ethnicity_stats, nrow=1) , filename =paste(output_file,"_demo_stats.png",sep = ""),path = path, width = 16, height = 8, units = "in", device = "png"))
-
   
-  #Create plots for sample_types, strategy and source.
-
-  plot_type_stats=ggplot(data = sample_type_count, mapping = aes(x=ingest, y=n, fill=sample_type))+
-    scale_fill_viridis(discrete=TRUE,option="cividis")+
-    geom_bar(alpha=0.5, stat = "identity")+
-    geom_text(aes(label = n, fontface="bold"),size=5,
-              position = position_stack(vjust=0.5))+
-    geom_text(aes(x=ingest, label=sum(sample_type_count$n), y=sum(sample_type_count$n)+(sum(sample_type_count$n)/50)), size=5)+
-    guides(fill=guide_legend(title = "Sample Type"))+
-    theme_few()+
-    ggtitle(" ")+
-    labs(y="Count")+
-    theme(axis.text=element_text(size=12),
-          axis.ticks.x=element_blank(),
-          axis.title.x=element_blank(),
-          plot.title = element_text(hjust = 0.5))
-
-  plot_strategy_stats=ggplot(data = library_strategy_count, mapping = aes(x=ingest, y=n, fill=library_strategy))+
-    scale_fill_viridis(discrete=TRUE,option="cividis")+
-    geom_bar(alpha=0.5, stat = "identity")+
-    geom_text(aes(label = n, fontface="bold"),size=5,
-              position = position_stack(vjust=0.5))+
-    geom_text(aes(x=ingest, label=sum(library_strategy_count$n), y=sum(library_strategy_count$n)+(sum(library_strategy_count$n)/50)), size=5)+
-    guides(fill=guide_legend(title = "Library Strategy"))+
-    theme_few()+
-    ggtitle("Counts for Submission")+
-    labs(y="Count")+
-    theme(axis.text=element_text(size=12),
-          axis.ticks.x=element_blank(),
-          axis.title.x=element_blank(),
-          plot.title = element_text(hjust = 0.5))
-
-  plot_source_stats=ggplot(data = library_source_count, mapping = aes(x=ingest, y=n, fill=library_source))+
-    scale_fill_viridis(discrete=TRUE,option="cividis")+
-    geom_bar(alpha=0.5, stat = "identity")+
-    geom_text(aes(label = n, fontface="bold"),size=5,
-              position = position_stack(vjust=0.5))+
-    geom_text(aes(x=ingest, label=sum(library_source_count$n), y=sum(library_source_count$n)+(sum(library_source_count$n)/50)), size=5)+
-    guides(fill=guide_legend(title = "Library Source"))+
-    theme_few()+
-    ggtitle(" ")+
-    labs(y="Count")+
-    theme(axis.text=element_text(size=12),
-          axis.ticks.x=element_blank(),
-          axis.title.x=element_blank(),
-          plot.title = element_text(hjust = 0.5))
-
-  suppressWarnings(ggsave(plot = grid.arrange(plot_type_stats, plot_strategy_stats, plot_source_stats, nrow=1) , filename =paste(output_file,"_library_stats.png",sep = ""),path = path, width = 16, height = 8, units = "in", device = "png"))
-
-
-  #Create plots for anatomic_site, diagnosis, and disease.
-
-  plot_anatomic_stats=ggplot(data = anatomic_site_count, mapping = aes(x=ingest, y=n, fill=sample_anatomic_site))+
-    scale_fill_viridis(discrete=TRUE,option="cividis")+
-    geom_bar(alpha=0.5, stat = "identity")+
-    geom_text(aes(label = n, fontface="bold"),size=5,
-              position = position_stack(vjust=0.5))+
-    geom_text(aes(x=ingest, label=sum(anatomic_site_count$n), y=sum(anatomic_site_count$n)+(sum(anatomic_site_count$n)/50)), size=5)+
-    guides(fill=guide_legend(title = "Sample Anatomic Site"))+
-    theme_few()+
-    ggtitle(" ")+
-    labs(y="Count")+
-    theme(axis.text=element_text(size=12),
-          axis.ticks.x=element_blank(),
-          axis.title.x=element_blank(),
-          plot.title = element_text(hjust = 0.5))
-
-  plot_diagnosis_stats=ggplot(data = primary_diagnosis_count, mapping = aes(x=ingest, y=n, fill=primary_diagnosis))+
-    scale_fill_viridis(discrete=TRUE,option="cividis")+
-    geom_bar(alpha=0.5, stat = "identity")+
-    geom_text(aes(label = n, fontface="bold"),size=5,
-              position = position_stack(vjust=0.5))+
-    geom_text(aes(x=ingest, label=sum(primary_diagnosis_count$n), y=sum(primary_diagnosis_count$n)+(sum(primary_diagnosis_count$n)/50)), size=5)+
-    guides(fill=guide_legend(title = "Primary Diagnosis"))+
-    theme_few()+
-    ggtitle("Counts for Submission")+
-    labs(y="Count")+
-    theme(axis.text=element_text(size=12),
-          axis.ticks.x=element_blank(),
-          axis.title.x=element_blank(),
-          plot.title = element_text(hjust = 0.5))
-
-  plot_disease_stats=ggplot(data = disease_type_count, mapping = aes(x=ingest, y=n, fill=disease_type))+
-    scale_fill_viridis(discrete=TRUE,option="cividis")+
-    geom_bar(alpha=0.5, stat = "identity")+
-    geom_text(aes(label = n, fontface="bold"),size=5,
-              position = position_stack(vjust=0.5))+
-    geom_text(aes(x=ingest, label=sum(disease_type_count$n), y=sum(disease_type_count$n)+(sum(disease_type_count$n)/50)), size=5)+
-    guides(fill=guide_legend(title = "Disease Type"))+
-    theme_few()+
-    ggtitle(" ")+
-    labs(y="Count")+
-    theme(axis.text=element_text(size=12),
-          axis.ticks.x=element_blank(),
-          axis.title.x=element_blank(),
-          plot.title = element_text(hjust = 0.5))
-
-  suppressWarnings(ggsave(plot = grid.arrange(plot_anatomic_stats, plot_diagnosis_stats, plot_disease_stats, nrow=1) , filename =paste(output_file,"_diagnosis_stats.png",sep = ""),path = path, width = 16, height = 8, units = "in", device = "png"))
-
+  #####################
+  # List of figure groupings
+  #####################
+  
+  #create lists to note which properties will be contained in the figure. It is best not to put more than 3 in a figure, but that is not a hard rule. These values can be changed in teh save_plot where the ncol and nrow values are noted.
+  demo_stats=list(gender_count_plot=gender_count,race_count_plot=race_count,ethnicity_count_plot=ethnicity_count)
+  
+  library_stats=list(sample_type_count_plot=sample_type_count,library_strategy_count_plot=library_strategy_count,library_source_count_plot=library_source_count)
+  
+  diagnosis_stats=list(anatomic_site_count_plot=anatomic_site_count,primary_diagnosis_count_plot=primary_diagnosis_count,disease_type_count_plot=disease_type_count)
+  
+  grand_list=list(demo_stats=demo_stats,library_stats=library_stats,diagnosis_stats=diagnosis_stats)
+  
+  #MAKE A FOR LOOP THAT GOES THROUGH GRAND LIST AND DOES THE INGEST COLUMN AND NA FIX
+  for (sublist in names(grand_list)){
+    sublists = names(grand_list[sublist][[1]])
+    for (list in sublists){
+      dfl=grand_list[sublist][[1]][list][[1]]
+      ingest_name=colnames(dfl)[!colnames(dfl) %in% "n"]
+      ingest_name_fixed=toTitleCase(stri_replace_all_fixed(str = ingest_name,pattern = "_", replacement = " "))
+      dfl$ingest=ingest_name_fixed
+      dfl[is.na(dfl)]<-"NA"
+      
+      if (dim(dfl)[1]>11){
+        dfl=dfl%>%
+          arrange(desc(n))
+        cutoff_n=dfl$n[10]
+        other_dfl=filter(dfl, n<cutoff_n)
+        other_value=sum(other_dfl$n)
+        dfl=filter(dfl, n>=cutoff_n)
+        dfl_add=tibble(fill_name="Other",n=other_value,ingest=ingest_name_fixed)
+        colnames(dfl_add)<-c(ingest_name,"n","ingest")
+        dfl=rbind(dfl,dfl_add)
+      }
+      
+      grand_list[sublist][[1]][list][[1]]<-dfl
+    }
+  }
+  
+  #For each list, go through each data frame, and make plots for each and save grouped based on the list.
+  for (list_num in 1:length(grand_list)){
+    list_name=names(grand_list)[list_num]
+    list_ref=names(grand_list[list_num][[1]])
+    grand_list_plot=list()
+    fill_value=c()
+    
+    for (list_num_minor in 1:length(list_ref)){
+      list_list_ref=names(grand_list[list_num][[1]][list_num_minor])
+      df_list_list=grand_list[list_num][[1]][list_num_minor][[1]]
+      fill_value=colnames(df_list_list)[1]
+      
+      #plot it
+      plot=ggplot(data = df_list_list, mapping = aes(x=ingest,y=n,!!!ensyms(fill=fill_value)))+
+        scale_fill_viridis(discrete=TRUE,option="cividis")+
+        geom_bar(alpha=0.5, stat = "identity")+
+        geom_text(aes(label = n,family="Times New Roman", fontface="bold"),size=5,
+                  position = position_stack(vjust=0.5))+
+        geom_text(aes(x=ingest, label=sum(n), y=sum(n)+(sum(n)/50)), size=5)+
+        theme_few(base_family = "Times New Roman")+
+        ggtitle(" ")+
+        labs(y="Count")+
+        guides(fill=guide_legend(title = fill_value))+
+        theme(axis.text=element_text(size=12),
+              axis.ticks.x=element_blank(),
+              axis.title.x=element_blank(),
+              plot.title = element_text(hjust = 0.5))
+      
+      #save plot to list
+      grand_list_plot[list_ref[list_num_minor]]=list(assign(list_ref[list_num_minor],plot))
+    }
+    
+    #save plot file
+    suppressWarnings(ggsave(plot = marrangeGrob(grand_list_plot,nrow=1,ncol=3, top=textGrob("Submission Counts",gp=gpar(fontsize=20))), filename =paste(output_file,"_",list_name,"_stats.png",sep = ""),path = path, width = 16, height = 8, units = "in", device = "png"))
+    
+  }
   
 }else{
   cat("\n\nFor indepth stats for a specific submission, please submit the indexed manifest.\n")
